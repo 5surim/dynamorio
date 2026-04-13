@@ -208,17 +208,7 @@ __strncat_chk(char *dest, const char *src, size_t n, size_t dst_len)
 int
 d_r_strcmp(const char *left, const char *right)
 {
-    char probe;
     size_t i;
-    if (left == NULL || right == NULL) {
-        if (left == right)
-            return 0;
-        return left == NULL ? -1 : 1;
-    }
-    /* Guard against use-after-free / stale pointers (i#XXXX: race in module
-     * tracking with multi-threaded apps doing concurrent dlopen/dlclose). */
-    if (!d_r_safe_read(left, 1, &probe) || !d_r_safe_read(right, 1, &probe))
-        return left < right ? -1 : 1;
     for (i = 0; left[i] != '\0' || right[i] != '\0'; i++) {
         if (left[i] < right[i])
             return -1;

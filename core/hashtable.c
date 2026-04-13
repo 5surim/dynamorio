@@ -274,6 +274,15 @@ generic_hash_iterate_remove(dcontext_t *dcontext, generic_table_t *htable, int i
 static inline bool
 strhash_key_cmp(strhash_table_t *htable, const char *s1, const char *s2)
 {
+    /* Guard against use-after-free pointers from module tracking race
+     * conditions in multi-threaded apps doing concurrent dlopen/dlclose.
+     * If either key pointer is unreadable, report "equal" so the hash
+     * table lookup returns the (stale) entry rather than looping forever
+     * through an open-addressed table that never hits an empty slot. */
+    char probe;
+    if (s1 == NULL || s2 == NULL ||
+        !d_r_safe_read(s1, 1, &probe) || !d_r_safe_read(s2, 1, &probe))
+        return true;
     if (TEST(STRHASH_CASE_INSENSITIVE, htable->table_flags))
         return strcasecmp(s1, s2) == 0;
     else
