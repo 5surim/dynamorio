@@ -204,11 +204,22 @@ __strncat_chk(char *dest, const char *src, size_t n, size_t dst_len)
 }
 #endif
 
-/* Private strcmp. */
+/* Private strcmp.
+ * Guard against stale pointers when dynamo is fully initialized.
+ * d_r_safe_read uses signal handlers, so it can only be called after
+ * dynamo_initialized is true (signal handling is set up).
+ * Returns 0 (equal) on bad pointers to break callers out of loops.
+ */
 int
 d_r_strcmp(const char *left, const char *right)
 {
     size_t i;
+    if (dynamo_initialized) {
+        char probe;
+        if (left == NULL || right == NULL ||
+            !d_r_safe_read(left, 1, &probe) || !d_r_safe_read(right, 1, &probe))
+            return 0;
+    }
     for (i = 0; left[i] != '\0' || right[i] != '\0'; i++) {
         if (left[i] < right[i])
             return -1;
