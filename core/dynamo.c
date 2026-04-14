@@ -760,6 +760,12 @@ dynamorio_app_init_part_two_finalize(void)
     }
 
     dynamo_initialized = true;
+    {
+        /* Override the weak symbol in string.c to enable the safe_read guard
+         * in d_r_strcmp now that signal handlers are set up. */
+        extern bool dynamo_initialized_for_strcmp;
+        dynamo_initialized_for_strcmp = true;
+    }
 
     /* Protect .data, assuming all vars there have been initialized. */
     SELF_PROTECT_DATASEC(DATASEC_RARELY_PROT);
@@ -968,6 +974,10 @@ standalone_init(void)
     dynamo_options.dynamic_options = false;
 
     dynamo_initialized = true;
+    {
+        extern bool dynamo_initialized_for_strcmp;
+        dynamo_initialized_for_strcmp = true;
+    }
 
     return dcontext;
 }

@@ -209,12 +209,18 @@ __strncat_chk(char *dest, const char *src, size_t n, size_t dst_len)
  * d_r_safe_read uses signal handlers, so it can only be called after
  * dynamo_initialized is true (signal handling is set up).
  * Returns 0 (equal) on bad pointers to break callers out of loops.
+ *
+ * string.c is linked into both the core (libdynamorio) and non-core tools
+ * (libdrinjectlib, libdrdecode) where dynamo_initialized is not defined.
+ * Declare a weak fallback so non-core links resolve to false (guard disabled).
  */
+WEAK bool dynamo_initialized_for_strcmp = false;
+
 int
 d_r_strcmp(const char *left, const char *right)
 {
     size_t i;
-    if (dynamo_initialized) {
+    if (dynamo_initialized_for_strcmp) {
         char probe;
         if (left == NULL || right == NULL ||
             !d_r_safe_read(left, 1, &probe) || !d_r_safe_read(right, 1, &probe))
