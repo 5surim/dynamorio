@@ -1168,8 +1168,8 @@ process_and_output_buffer(void *drcontext, bool skip_size_cap)
                         if (type == TRACE_TYPE_INSTR) {
                             addr_t pc = instru->get_entry_addr(drcontext, mem_ref);
 
-                            if (pc != prev_pc) {
-                                toadd = 1;
+                            if (pc != prev_pc || instru->get_instr_count(mem_ref) > 1) {
+                                toadd = instru->get_instr_count(mem_ref);
                                 prev_pc = pc;
                             }
                         }
